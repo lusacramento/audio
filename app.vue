@@ -1,59 +1,40 @@
 <template>
-  <div>
-    <button ref="startButton" disabled @click.prevent="startRecord">Gravar</button>
-    Meter: {{ meterValue }}
+  <div label="Microphone">
+    <div id="content"></div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { UserMedia, Meter } from 'tone';
-
-const startButton = ref()
-const meterValue = ref()
+import { UserMedia, FFT } from 'tone';
 
 
-onMounted(() => {
-  startButton.value.disabled = false
-})
+onMounted(async () => {
+  const fft = await new FFT()
+  const mic = new UserMedia().connect(fft)
+  await mic.open()
 
-
-function startRecord() {
-  console.log("start record");
-  startButton.value.disabled = true
-
-
-  const meter = new Meter()
-  const mic = new UserMedia()
-  mic.connect(meter)
-  mic.open().then(() => {
-    // promise resolves when input is available
+  const handler = () => {
     console.log("mic open");
-    // print the incoming mic levels in decibels
-    setInterval(() => meterValue.value = meter.getValue(), 200);
-  }).catch(e => {
-    // promise is rejected when the user doesn't have or allow mic access
-    console.log("mic not open");
-  });
+    clearInterval(interval);
+
+    setInterval(() => {
+      console.log(fft.getValue());
+    }, 5000); // Update every second
+  };
+
+  const interval = setInterval(handler, 500); // Check after half-second to ensure microphone has started
+
+});
 
 
-
-
-
-}
-
-function stopRecord() {
-  stopButton.value.disabled = true
-  startButton.value.disabled = false
-}
 
 </script>
 <style scoped>
-/* #content{
-width: 100%;
+#content {
+  width: 100%;
   background-color: black;
   height: 40px;
   border-radius: 20px;
   margin-bottom: 10px;
 }
-*/
 </style>
